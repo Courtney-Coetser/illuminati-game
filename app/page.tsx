@@ -1,6 +1,5 @@
 'use client'
 import { useState, useEffect } from 'react';
-import WebApp from '@twa-dev/sdk';
 
 interface UserData {
   id: number;
@@ -9,22 +8,41 @@ interface UserData {
   username?: string;
   language_code: string;
   is_premium: boolean;
-  
+}
+
+// Define proper type for WebApp
+interface TelegramWebApp {
+  initDataUnsafe: {
+    user: UserData;
+  };
+}
+
+// Define the Telegram namespace type
+// interface TelegramType {
+//   WebApp: TelegramWebApp;
+// }
+
+// Replace dynamic import with proper type declaration
+let WebApp: TelegramWebApp | undefined;
+if (typeof window !== 'undefined') {
+  const telegram = (window as { Telegram?: { WebApp: TelegramWebApp } }).Telegram;
+  if (telegram) {
+    WebApp = telegram.WebApp;
+  }
 }
 
 export default function Home() {
   const [userData, setUserData] = useState<UserData | null>(null);
   
   useEffect(() => {
-    if (WebApp.initDataUnsafe.user) {
+    if (typeof window !== 'undefined' && WebApp?.initDataUnsafe?.user) {
       setUserData(WebApp.initDataUnsafe.user as UserData);
     }
-  },[])
+  }, []);
 
   return (
-  <main className="p-4">
-    {
-      userData ? (
+    <main className="p-4">
+      {userData ? (
         <div>
           <h1 className="text-2xl font-bold">Hello {userData.first_name}</h1>
           <ul>
@@ -40,9 +58,7 @@ export default function Home() {
         <div>
           <h1 className="text-2xl font-bold">Loading...</h1>
         </div>
-      )
-    }
-  </main>  
-  
+      )}
+    </main>
   );
 }
